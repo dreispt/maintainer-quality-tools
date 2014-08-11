@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
 from __future__ import print_function
 
 import os
@@ -38,6 +37,7 @@ def main():
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_version = os.environ.get("VERSION")
+    expect_errors = os.environ.get("TEST_EXPECT_ERRORS", "")
     if not odoo_version:
         # For backward compatibility, take version from parameter
         # if it's not globally set
@@ -100,11 +100,13 @@ def main():
     subprocess.check_call(command_call, shell=True)
     # Find errors, except from failed mails
     errors = has_test_errors("stdout.log", database)
-    if errors:
-        print("Found %d lines with errors" % errors)
-        return 1
-    # if we get here, all is OK
-    return 0
+    print("Found %d lines with errors" % errors)
+    if expect_errors:
+        print("Running self tests. Expecting %d errors." % int(expect_errors))
+        assert(errors == int(expect_errors))
+    else:
+        return 1 if errors else 0
+
 
 if __name__ == '__main__':
     exit(main())
