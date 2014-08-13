@@ -59,7 +59,8 @@ def main():
 
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     odoo_org, odoo_repo = odoo_full.split('/')
-    server_path = "../%s-%s" % (odoo_repo, odoo_version)
+    server_dirname = "%s-%s" % (odoo_repo, odoo_version)
+    server_path = os.path.join(travis_home, server_dirname)
     addons_path_list = (
         get_addons(travis_build_dir) +
         get_addons(travis_home) +
