@@ -46,7 +46,7 @@ def is_installable_module(path):
     return False
 
 
-def get_modules(path):
+def get_modules(path, recursive=True):
 
     # Avoid empty basename when path ends with slash
     if not os.path.basename(path):
@@ -60,20 +60,24 @@ def get_modules(path):
 
 
 def is_addons(path):
-    res = get_modules(path) != []
-    return res
+    """Detect if ``path`` is a valid addons directory"""
+    return any(is_module(x) for x in os.listdir(path))
 
 
-def get_addons(path):
-    if not os.path.exists(path):
-        return []
-    if is_addons(path):
-        res = [path]
-    else:
-        res = [os.path.join(path, x)
-               for x in sorted(os.listdir(path))
-               if is_addons(os.path.join(path, x))]
-    return res
+def get_addons(path, recursive=True):
+    """Return a list of addon paths inside ``path``"""
+
+    def _yield_addons(path, recursive=True):
+        if os.path.exists(path) and not is_module(path):
+            if is_addons(path):
+                yield path
+            elif recursive:
+                for subdir in os.listdir(path):
+                    subpath = os.path.join(path, subdir)
+                    for res in _yield_addons(subpath):
+                        yield res
+
+    return sorted(_yield_addons(path, recursive))
 
 
 def get_modules_changed(path, ref='HEAD'):
